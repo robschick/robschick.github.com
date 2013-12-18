@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Rob Schick" />
+  <meta name="date" content="2013-11-28" />
+  <title>Using Make-like and Makefiles in R</title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+   href="slidy.css" />
+  <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+  <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+  
+  
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js.gz"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Using Make-like and Makefiles in R</h1>
+  <p class="author">
+Rob Schick
+  </p>
+  <p class="date">November 28, 2013</p>
+</div>
+<div class="section slide level1" id="introduction">
+<h1>Introduction</h1>
+<ul>
+<li>Reproducible research</li>
+<li>Motivation: I wanted a better way to link multiple files/analysis chunks together</li>
+<li>make-like files in R</li>
+<li>Makefiles at the command line</li>
+</ul>
+</div>
+<div class="section slide level1" id="research-scandal-at-duke">
+<h1>Research Scandal at Duke</h1>
+<div class="figure">
+<img src="images/duke60.png" alt="alt text" /><p class="caption">alt text</p>
+</div>
+</div>
+<div class="section slide level1" id="research-scandal-at-duke---further-reading">
+<h1>Research Scandal at Duke - further reading</h1>
+<p><img src="images/baggcombs.png" alt="baggerly article" /> * <a href="http://bit.ly/1bnzxUT">http://bit.ly/1bnzxUT</a></p>
+</div>
+<div class="section slide level1" id="reproducible-research-in-psychology">
+<h1>Reproducible research in psychology</h1>
+<img src="images/nature1.png" alt="Nature" style="width: 600px;"/>
+</div>
+<div class="section slide level1" id="reproducible-research-in-psychology-1">
+<h1>Reproducible research in psychology</h1>
+<img src="images/nature2.png" alt="nature 2" align = 'middle' style="width: 600px;"/>
+</div>
+<div class="section slide level1" id="reproducible-research-in-the-news">
+<h1>Reproducible research in the news</h1>
+<ul>
+<li>Roger Peng’s excellent series on reproducible research within R:</li>
+<li><a href="http://bit.ly/1bnz6tO">http://bit.ly/1bnz6tO</a></li>
+<li><a href="http://bit.ly/1cuKL6O">http://bit.ly/1cuKL6O</a></li>
+<li><a href="http://bit.ly/1hi2yUs">http://bit.ly/1hi2yUs</a></li>
+</ul>
+</div>
+<div class="section slide level1" id="roger-pengs-reproducible-research-schematic">
+<h1>Roger Peng’s Reproducible Research Schematic</h1>
+<img src="images/dsmpic.png" alt="Peng" align = 'middle' style="width: 700px;"/>
+</div>
+<div class="section slide level1" id="sample-workflow-form-christopher-gandrud">
+<h1>Sample Workflow form Christopher Gandrud</h1>
+<img src="images/Workflow.png" alt="Peng" align = 'middle' style="width: 700px;"/>
+</div>
+<div class="section slide level1" id="make-like-files-vs.makefiles">
+<h1>make-like files vs. makefiles</h1>
+<ul>
+<li>make-like files are simply *.R files</li>
+<li>easy to code</li>
+<li>less easy to maintain</li>
+<li>difficult to chain together</li>
+<li>if one file is computationally intensive, you would want to run them <em>only</em> when they are updated</li>
+</ul>
+</div>
+<div class="section slide level1" id="make-like-files-in-r">
+<h1>make-like Files in R</h1>
+<p>Inspired by Gandrud (2013):</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">setwd</span>(<span class="st">&quot;ExampleProject&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;gather1.R&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;gather2.R&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;gather3.R&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;mergedata.R&quot;</span>)</code></pre>
+</div>
+<div class="section slide level1" id="make-like-files-in-r-changing-by-hand">
+<h1>make-like Files in R: changing by hand</h1>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">setwd</span>(<span class="st">&quot;ExampleProject&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;gather1.R&quot;</span>)
+<span class="co"># source(&#39;gather2.R&#39;)</span>
+<span class="kw">source</span>(<span class="st">&quot;gather3.R&quot;</span>)
+<span class="kw">source</span>(<span class="st">&quot;mergedata.R&quot;</span>)</code></pre>
+<ul>
+<li>There must be a better way…</li>
+</ul>
+</div>
+<div class="section slide level1" id="whats-a-make-file">
+<h1>What’s a make file?</h1>
+<ul>
+<li>Defined:</li>
+</ul>
+<blockquote>
+<p>In software development, Make is a utility that automatically builds executable programs and libraries from source code by reading files called makefiles which specify how to derive the target program. Though integrated development environments and language-specific compiler features can also be used to manage a build process, Make remains widely used, especially in Unix.</p>
+</blockquote>
+<ul>
+<li>Created by Stuart Feldman at Bell Labs in 1976</li>
+<li>[http://en.wikipedia.org/wiki/Make<em>(software)](http://en.wikipedia.org/wiki/Make</em>(software))</li>
+</ul>
+</div>
+<div class="section slide level1" id="how-does-it-work">
+<h1>How does it work?</h1>
+<ul>
+<li>By comparing the time stamps of input and output files</li>
+<li>If the source file is newer than the output file, make will rerun the input file</li>
+<li>If the output file is newer than the source file, make will skip the file</li>
+</ul>
+</div>
+<div class="section slide level1" id="in-make-terminology">
+<h1>In Make terminology</h1>
+<ul>
+<li>output files are called “targets”</li>
+<li>source files are called “prerequisites”</li>
+<li>You need to specify a “recipe” to create the targets from the prerequisites:</li>
+</ul>
+</div>
+<div class="section slide level1" id="visually">
+<h1>Visually</h1>
+<pre class="sourceCode r"><code class="sourceCode r">TARGET... : PREREQUISITE ...
+  RECIPE</code></pre>
+<ul>
+<li>tabs are important and meaningful</li>
+</ul>
+</div>
+<div class="section slide level1" id="example-makefile">
+<h1>Example makefile</h1>
+<pre class="sourceCode r"><code class="sourceCode r">RDIR = .
+MERGE_OUT = MergeData.Rout
+
+RSOURCE = $(wildcard $(RDIR)<span class="er">/*</span>.R)
+
+OUT_FILES = $(RSOURCE:<span class="dt">.R=</span>.Rout)
+
+all: $(OUT_FILES)
+
+$(RDIR)/%.Rout: $(RDIR)/%.R
+    R CMD BATCH $&lt;
+
+clean:
+    rm -fv $(OUT_FILES)
+
+cleanMerge:
+    rm -fv $(MERGE_OUT)</code></pre>
+</div>
+<div class="section slide level1" id="lets-work-through-these-in-turn">
+<h1>Let’s work through these in turn</h1>
+<pre class="sourceCode r"><code class="sourceCode r">RDIR = .
+MERGE_OUT = MergeData.Rout</code></pre>
+<ul>
+<li>set the working directory with .</li>
+<li>set the variable for the output of the last file</li>
+<li>we’ll need this to ensure we always run this file</li>
+</ul>
+</div>
+<div class="section slide level1" id="list-the-.r-source-code-files">
+<h1>List the .R Source Code Files</h1>
+<pre class="sourceCode r"><code class="sourceCode r">RSOURCE = $(wildcard $(RDIR)<span class="er">/*</span>.R)</code></pre>
+<ul>
+<li>Keeping the working directory with RDIR</li>
+<li>finding all source files that end with .R</li>
+<li>wildcard creates a list of all these files</li>
+<li>default syntax is <code>$(wildcard PATTERN)</code></li>
+<li>in make, $(variable) substitutes the value of the variable</li>
+</ul>
+</div>
+<div class="section slide level1" id="using-.rout-files-within-make">
+<h1>Using .Rout files within make</h1>
+<pre class="sourceCode r"><code class="sourceCode r">OUT_FILES = $(RSOURCE:<span class="dt">.R=</span>.Rout)</code></pre>
+<ul>
+<li>make will use the .Rout files to determine when each .R file was run</li>
+<li><code>$(RSOURCE:.R=.Rout)</code> uses the file name form <code>RSOURCE</code> and changes the extension to .Rout</li>
+<li><code>gather1.R</code> becomes <code>gather1.Rout</code> automagically</li>
+</ul>
+</div>
+<div class="section slide level1" id="this-tells-make-what-we-want-to-create">
+<h1>This tells make what we want to create</h1>
+<pre class="sourceCode r"><code class="sourceCode r">all: $(OUT_FILES)</code></pre>
+<ul>
+<li>This is what Make tries to create when you type <code>make</code> at the command prompt with no targets</li>
+</ul>
+</div>
+<div class="section slide level1" id="this-actually-runs-the-r-source-code">
+<h1>This actually runs the R source code</h1>
+<pre class="sourceCode r"><code class="sourceCode r">$(RDIR)/%.Rout: $(RDIR)/%.R
+  R CMD BATCH $&lt;</code></pre>
+<ul>
+<li>The first line specifies that .Rout files are the TARGETS of the .R files</li>
+<li>the second line runs these files</li>
+</ul>
+</div>
+<div class="section slide level1" id="a-different-target-clean">
+<h1>A different TARGET: clean</h1>
+<pre class="sourceCode r"><code class="sourceCode r">clean:
+  rm -fv $(OUT_FILES)</code></pre>
+<ul>
+<li>if you type <code>make clean</code> then make follows the recipe that says <code>rm -fv</code> for all the out files</li>
+</ul>
+</div>
+<div class="section slide level1" id="pushing-changes-downstream">
+<h1>Pushing changes downstream</h1>
+<pre class="sourceCode r"><code class="sourceCode r">cleanMerge:
+  rm -fv $(MERGE_OUT)</code></pre>
+<ul>
+<li>This makefile doesn’t push changes downstream</li>
+<li>if we change <code>Gather2.R</code> then run <code>make</code> only <code>Gather2.R</code> will be rerun</li>
+<li>this line ensures the merged dataset will be rerun by removing the <code>MergeData.Rout</code> file</li>
+</ul>
+</div>
+<div class="section slide level1" id="running-the-file">
+<h1>Running the file</h1>
+<ul>
+<li>Can do this from the command line:</li>
+<li>using xtools on a mac</li>
+<li>using rtools on windows</li>
+<li>Can run it straight from RStudio</li>
+<li>Create a makefile in the same directory</li>
+<li>Use the Build tab that automatically pops up when you have the makefile</li>
+</ul>
+</div>
+<div class="section slide level1" id="lets-see-it-in-action">
+<h1>Let’s see it in action</h1>
+<p><img src="images/buildtab.png" alt="alt text" /> * (example)</p>
+</div>
+<div class="section slide level1" id="dependencies">
+<h1>Dependencies</h1>
+<ul>
+<li>We can structure the makefile to account for dependencies</li>
+<li>(example)</li>
+<li>For example, only run <code>runRegression.R</code> if <code>getData.R</code> is updated:</li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r">$(RDIR)/runRegression.Rout: $(RDIR)/runRegression.R $(RDIR)/getData.R  
+  R CMD BATCH $&lt;</code></pre>
+<ul>
+<li>These can get a little tricky (example)</li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r">$(RDIR)/outputTable.Rout: $(RDIR)/outputTable.R $(RDIR)/runRegression.Rout 
+  R CMD BATCH $&lt;</code></pre>
+</div>
+<div class="section slide level1" id="latex-make-and-r">
+<h1>\(\LaTeX\), Make, and R</h1>
+<ul>
+<li>It is possible to have one makefile for your analysis code and your writing code</li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r">$(TEXFILE).pdf: $(TEXFILE).tex $(OUT_FILES) $(CROP_FILES)
+  latexmk -pdf -quiet $(TEXFILE)</code></pre>
+<ul>
+<li>See Rob Hyndman’s post: <a href="http://bit.ly/1bnUtLp">http://bit.ly/1bnUtLp</a></li>
+</ul>
+</div>
+</body>
+</html>
